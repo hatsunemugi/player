@@ -7,7 +7,7 @@
 因此，服务端使用多线程集成了Qt与asio的事件循环。
 
 模仿QHttpServer api实现了函数
-route(QString,std::function<T(T)>);
+route(QString,std::function<QVariant(QVariant)>);
 
 可以简化代理，例如
 
