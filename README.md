@@ -8,9 +8,13 @@
 
 模仿QHttpServer api实现了函数
 route(QString,std::function<T(T)>);
+
 可以简化代理，例如
+
 route("/version",[&](){
+
     return "1.0.0";
+    
 });
 
 #大坑
