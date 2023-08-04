@@ -38,7 +38,7 @@ set(ASIO_PATH C:/Users/c/lib/asio)
 
 cmake模板
 
-file(GLOB FILES "相对路径/*.*")#FILES中存储了绝对路径
+    file(GLOB FILES "相对路径/*.*")#FILES中存储了绝对路径
 
     foreach(filepath ${FILES})
 
