@@ -17,6 +17,12 @@ route(QString,std::function<QVariant(QVariant)>);
     
     });
 
+#关于QThread/std::thread
+
+使用继承自QObject的类并moveToThread(QThread)可以轻易实现较为复杂的功能，而使用继承自QThread的类并在QThread::run()中实现功能却会处处不顺心。
+
+项目中我使用std::thread来处理asio的事件循环，使用detach()以实现分离线程，若是使用join()则会阻塞；
+
 #大坑
 
 asio的回调函数内写qt的connect是接受不到消息的，所以我在主线程实例化了QUdpSocket和QTcpServer的指针并进行监听
