@@ -40,17 +40,17 @@ cmake模板
 
 file(GLOB FILES "相对路径/*.*")#FILES中存储了绝对路径
 
-foreach(filepath ${FILES})
+    foreach(filepath ${FILES})
 
-    message(${filepath} "\t" ${CMAKE_CURRENT_SOURCE_DIR})
+        message(${filepath} "\t" ${CMAKE_CURRENT_SOURCE_DIR})
     
-    string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" filename ${filepath}) #.+/(.+)\\\\..*" "\\\\1 转换为相对路径
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" filename ${filepath}) #.+/(.+)\\\\..*" "\\\\1 转换为相对路径
     
-    list(APPEND FILES_R ${filename})
+        list(APPEND FILES_R ${filename})
     
-endforeach(filepath)
+    endforeach(filepath)
 
-list(REMOVE_DUPLICATES FILES_R) #表示删除非第一个重名值
+    list(REMOVE_DUPLICATES FILES_R) #表示删除非第一个重名值
 
 使用上述模板可以自动添加文件到构建系统。
 
