@@ -33,6 +33,7 @@ public:
     QString getName(){return name;}
     void open(QString);
     void setAddress(QString ip,int port);
+    void setScale(int);
 signals:
     void first_frame(QImage);
     void frame(QImage);
@@ -55,6 +56,7 @@ private:
     QVector<QImage> images;
     bool bIsDone;
     char* data_;
+    int video_keep_alive;
     int fps;
 
 private:
@@ -63,7 +65,7 @@ private:
     QThread* audio_thread;
     QThread* video_thread;
     UdpSocket* socket;
-//    Instance::TcpServer* server;
+    Instance::TcpServer* server;
     QTcpSocket* client;
 
 };
@@ -105,6 +107,13 @@ inline Media::Media(QObject *parent):client(nullptr)
     connect(audio_player,&AudioPlayer::sync_progress,this,&Media::sync_progress);
 //    connect(video_player, &VideoPlayer::draw,this, &Media::frame);
 //    connect(video_player, &VideoPlayer::first_frame,this, &Media::first_frame);
+    connect(video_player,&VideoPlayer::draw,this,[&](QImage image){
+        images<<image;
+    });
+    connect(this,&Media::sync_progress,this,[&](double progress){
+        socket->write(("sync_progress "+QString::number(progress)).toUtf8());
+    });
+
     audio_thread->start();
     video_thread->start();
 }
@@ -125,13 +134,16 @@ inline void Media::setAddress(QString ip_, int port_)
     ip = ip_;
     port = port_;
     bIsDone = true;
-    Instance::TcpServer* server = Instance::getTcpServerInstance();
-    socket =Instance::getUdpSocket();
+    socket = Instance::getUdpSocket();
+    server = Instance::getTcpServerInstance();
+    socket->setWriteAddress(ip,port);
+    disconnect(server,&Instance::TcpServer::newConnection,this,0);
     connect(server,&Instance::TcpServer::newConnection,this,[&](QTcpSocket* socket){
+        qDebug()<<"set tcp client";
         client = socket;
     });
+    disconnect(server,&Instance::TcpServer::readyRead,this,0);
     connect(server,&Instance::TcpServer::readyRead,this,[&](QString value){
-//        qDebug()<<value;
         if(value == "wrong data"){
             socket->write("handled");
             if(video_player->scale >= 20)
@@ -140,17 +152,26 @@ inline void Media::setAddress(QString ip_, int port_)
         }
         else if(value == "done")
             bIsDone =true;
+        else{
+            qDebug()<<value;
+        }
     });
-    socket->setWriteAddress(ip,port);
-    connect(this,&Media::sync_progress,this,[&](double progress){
-        socket->write(("sync_progress "+QString::number(progress)).toUtf8());
-    });
+
+    disconnect(audio_player,&AudioPlayer::sync_socket,this,0);
     connect(audio_player,&AudioPlayer::sync_socket,this,[&](QByteArray audio){
         int size = audio.size();
         socket->write(QString("audio_frame %1").arg(size).toUtf8());
         socket->socket.writeDatagram(QNetworkDatagram(audio,QHostAddress(socket->ip_w),52064));
 
-        if(bIsDone)
+        video_keep_alive++;
+
+        if(video_keep_alive >= 64){
+            video_keep_alive = 0;
+            if(!bIsDone && images.size() > 32)
+                bIsDone = true;
+        }
+
+        if(bIsDone && images.size() != 0)
         {
             QByteArray data;
             QBuffer buffer(&data);
@@ -160,6 +181,10 @@ inline void Media::setAddress(QString ip_, int port_)
             qint64 max_size = (1<<16)-1 ;
             int n = ceil(all/max_size);
             socket->write(QString("video_frame %1").arg(all).toUtf8());
+            if(client == nullptr){
+                qDebug()<<"tcp client nullptr";
+                return;
+            }
             for(int i=0; i<n-1;i++)
             {
                 client->write(data.mid(i*max_size,max_size));
@@ -171,19 +196,25 @@ inline void Media::setAddress(QString ip_, int port_)
                 QImage image = images[2];
                 images.clear();
                 images<<image;
-//                if(video_player->scale >= 20)
-//                    video_player->scale--;
-                qDebug()<<"too lag scale"<<video_player->scale;
+                //                if(video_player->scale >= 20)
+                //                    video_player->scale--;
+//                qDebug()<<"too lag scale"<<video_player->scale;
 
             }
         }
 
 
     });
-    connect(video_player,&VideoPlayer::draw,this,[&](QImage image){
-        images<<image;
-    });
 
+
+
+}
+
+inline void Media::setScale(int value)
+{
+    if(1 <= value && value <= 100)
+    video_player->scale = value;
+    qDebug()<<"scale set"<<video_player->scale;
 }
 
 

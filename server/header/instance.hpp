@@ -21,8 +21,8 @@ namespace Instance
         void readyRead(QByteArray);
         void newConnection(QTcpSocket*);
     public:
-        QTcpSocket* client;
         QTcpServer server;
+        QTcpSocket* client;
         QHash<QHostAddress,QTcpSocket*> clients;
     };
     static QCoreApplication* core = nullptr;
@@ -51,9 +51,9 @@ namespace Instance
         connect(&server,&QTcpServer::newConnection,this,[&](){
             client=server.nextPendingConnection();
             clients.insert(client->peerAddress(),client);
-            qDebug()<<"new tcp connection from"<<client->peerAddress()<<client->peerName();
+            qDebug()<<"new tcp connection from"<<client->peerAddress()<<client->peerPort();
             emit newConnection(client);
-            connect(client,&QTcpSocket::disconnected,this,[&](){qDebug()<<"tcp disconnection from"<<client->peerAddress();});
+            connect(client,&QTcpSocket::disconnected,this,[&](){qDebug()<<"tcp disconnection from"<<client->peerAddress()<<client->peerPort();});
             connect(client,&QTcpSocket::readyRead,this,[&](){
                 QByteArray data=client->readAll();
                 emit readyRead(data);

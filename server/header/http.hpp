@@ -51,6 +51,8 @@ inline HttpSession::HttpSession(asio::io_context &context):Session(context),sql(
     route("/sql/table={}",[&](QVariant request){
         QVector<QString> keys = request.toStringList();
         keys.push_front("size");
+        Media* media = Instance::getMediaInstance();
+        media->setAddress(address.to_string().c_str(),52000);
         return sqlHandler(keys);
     });
     route("/sql/table={}/id={}",[&](QVariant request){
@@ -62,7 +64,6 @@ inline HttpSession::HttpSession(asio::io_context &context):Session(context),sql(
         QVector<QString> keys = request.toStringList();
         QString name = sqlHandler(keys,path).toString();
         Media* media = Instance::getMediaInstance();
-        media->setAddress(address.to_string().c_str(),52000);
         media->open(path.toString());
         return "port:52000:52064:52128:52256";
     });
@@ -72,6 +73,16 @@ inline HttpSession::HttpSession(asio::io_context &context):Session(context),sql(
     route("/play={}",[&](QVariant request){
         Media* media = Instance::getMediaInstance();
         emit media->exec(request.toString());
+        return request;
+    });
+    route("/scale={}",[&](QVariant request){
+        Media* media = Instance::getMediaInstance();
+        media->setScale(request.toString().toInt());
+        return request;
+    });
+    route("/speed={}",[&](QVariant request){
+        Media* media = Instance::getMediaInstance();
+        media->speed(request.toString().toDouble());
         return request;
     });
     route("/seek",[&](QVariant request){

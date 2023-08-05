@@ -139,9 +139,9 @@ inline void AudioPlayer::play()
 //                io->write((const char*)pcm,size);
                 QByteArray bytes(size,0);
                 memcpy((void*)bytes.data(),(void*)pcm,size);
+                emit sync_socket(bytes);
                 sleep(sleep_time / speed);
 //                buffer.push_back(bytes);
-                emit sync_socket(bytes);
                 delete[] pcm;
 //                qDebug()<<bytes.data();
             }

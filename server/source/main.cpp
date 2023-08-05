@@ -28,10 +28,9 @@ int main(int argc, char *argv[])
 //    QGuiApplication
     QGuiApplication a(argc, argv);
     Instance::core = &a;
-    Instance::getTcpServerInstance();
+    Instance::getUdpSocket();
+    Instance::getTcpServerInstance()->listen(52000+(1<<8));
     Instance::getMediaInstance();
-    Instance::server->listen(52000+(1<<8));
-    Instance::getUdpSocket()/*->listen(52000+(1<<8))*/;
     Instance::context = &context;
     system("chcp 936 & cls");
     QTextCodec *codec = QTextCodec::codecForName("UTF-8"); // 按照您的控制台编码选择对应的编码

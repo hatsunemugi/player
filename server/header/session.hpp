@@ -72,7 +72,7 @@ inline void Session::write(const char *data, size_t length)
     {
         if (!ec)
         {
-            cout<<"success\n";
+            cout<<"success"<<std::endl;
         }
         else{
             cout<< "READ failed, error code:" << ec.value()<<std::endl
