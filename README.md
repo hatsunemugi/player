@@ -17,6 +17,9 @@ route(QString,std::function<QVariant(QVariant)>);
     
     });
 
+#关于数据库
+本项目使用sqlite，保存在程序运行目录下的media.db
+
 #关于QThread/std::thread
 
 使用继承自QObject的类并moveToThread(QThread)可以轻易实现较为复杂的功能，而使用继承自QThread的类并在QThread::run()中实现功能却会处处不顺心。
