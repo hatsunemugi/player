@@ -44,6 +44,7 @@ private:
     PaintedItem* painter;
     Client* client;
     Media* media;
+    QThread* net;
     bool bIsLocal;
 };
 
@@ -72,6 +73,13 @@ inline void BackEnd::open(QString filepath)
         media->gui = this->gui;
         media->paint(this->painter);
     }
+    if(!database.contains("local"))
+    {
+        database.insert("local",new QVector<QString>);
+    }
+    auto& array = *database.value("local");
+    array.push_back(filepath.split("/").back());
+    emit media->exec("pause");
     emit media->open(filepath);
     emit media->exec("play");
     emit state(true);
@@ -105,6 +113,11 @@ inline void BackEnd::speed(double value)
         {
             emit media->speed(value);
         }
+    }
+    else
+    {
+        if(client != nullptr)
+            client->get(QString("/speed=%1").arg(value));
     }
 }
 
@@ -162,11 +175,40 @@ inline QVariant BackEnd::exec(QString command)
     print(words);
     if(words=="count value")
     {
-        return getTableSize(words[1].body);
+        if(bIsLocal)
+        {
+            if(database.contains("local"))
+            {
+                return database.value("local")->size();
+            }
+            else
+            {
+                return 0;
+            }
+        }
+        else
+        {
+            return getTableSize(words[1].body);
+        }
     }
     if(words=="select value id value")
     {
-        return getRecord(words[1].body,words[3].body.toInt());
+        if(bIsLocal)
+        {
+            if(database.contains("local"))
+            {
+                auto& array = *database.value("local");
+                return array[words[3].body.toInt()];
+            }
+            else
+            {
+                return 0;
+            }
+        }
+        else
+        {
+            return getRecord(words[1].body,words[3].body.toInt());
+        }
     }
     if(words=="play value id value")
     {
@@ -174,21 +216,51 @@ inline QVariant BackEnd::exec(QString command)
             client->get(QString("/sql/table=%1/id=%2/play").arg(words[1].body).arg(words[3].body.toInt()+1));
         return 0;
     }
+    if(words=="scale value")
+    {
+        if(client != nullptr)
+        {
+            int value = 25;
+            if(words[1].body=="0")
+                value = 8;
+            if(words[1].body=="1")
+                value = 15;
+            if(words[1].body=="2")
+                value = 44;
+            if(words[1].body=="3")
+                value = 100;
+            client->get(QString("/scale=%1").arg(value));
+        }
+        return 0;
+    }
     return 0;
 }
 
 inline void BackEnd::connect_to(QString ip, QString port)
 {
+    if(client != nullptr)
+    {
+        client->deleteLater();
+    }
     client = new Client;
+//    net = new QThread();
+    client->listen(52000,52064);
     client->connect_to(ip,port);
     client->get("/sql/table=media");
+//    connect(net,&QThread::started,this,[&](){
+
+//    });
+//    connect(net,&QThread::finished,client,&Client::deleteLater);
     connect(client,&Client::sync_progress,this,&BackEnd::sync);
     connect(client,&Client::video_frame,painter,&PaintedItem::setImage);
     connect(client,&Client::first_frame,painter,&PaintedItem::another);
+    connect(client,&Client::state,this,&BackEnd::state);
     if(database.contains("media"))
         delete database.value("media");
     database.insert("media",new QVector<QString>());
     bIsLocal = false;
+//    client->moveToThread(net);
+//    net->start();
 //    qDebug()<<ip<<port;
 }
 

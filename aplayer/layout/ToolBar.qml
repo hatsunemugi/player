@@ -124,6 +124,49 @@ Rectangle {
         }
     }
 
+    Drawer_h {
+        id: scaler
+        edge: Qt.RightEdge
+        width: parent.width/3
+        Rectangle {
+            color: "transparent"
+            anchors.fill: parent
+            ListView {
+//                id: listview
+                anchors.centerIn: parent
+                width: parent.width
+                height: count * 40
+                spacing: 16
+                clip: true
+                model: ["360p","480p","720p","1080p"]
+                delegate: Rectangle {
+                    height: 24
+                    width: parent.width
+                    Text {
+                        text: modelData
+                        color: "white"
+                        font.pointSize: 12
+                        anchors.fill: parent
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+
+                    }
+                    MouseArea_ {
+                        base_color: "transparent"
+                        onClicked: {
+                            backend.exec("scale " + index)
+                            scaler.close()
+                            root.open()
+                        }
+                    }
+                }
+            }
+        }
+        onOpened: {
+            anthology_count = backend.exec("count media")
+        }
+    }
+
     Rectangle {
         id:top
         height: height_min
@@ -366,6 +409,10 @@ Rectangle {
                         MouseArea_ {
                             base_color: "transparent"
                             onClicked:{
+                                if(index === 3){
+                                    root.close()
+                                    scaler.open()
+                                }
                                 if(index === 2){
                                     root.close()
                                     speed.open()

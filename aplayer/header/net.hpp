@@ -36,6 +36,9 @@ signals:
     void audio_frame(QByteArray);
     void video_frame(QImage);
     void first_frame();
+    void state(bool);
+public slots:
+    void listen(int,int);
 private:
     int index;
     int audio_size;
@@ -85,13 +88,19 @@ inline Client::Client(QObject *parent)
 
     io = audio_sink->start();
 
-    message.bind(QHostAddress::LocalHost,52000);
-    audio_socket.bind(QHostAddress::LocalHost,52064);
     QNetworkProxyFactory::setUseSystemConfiguration(false);
+
+}
+
+inline void Client::listen(int port_1, int port_2)
+{
+    message.bind(QHostAddress::LocalHost,port_1);
+    audio_socket.bind(QHostAddress::LocalHost,port_2);
+
 
     qDebug()<<"open message socket port:"<<message.localPort();
     qDebug()<<"open audio socket port:"<<audio_socket.localPort();
-//    qDebug()<<"open video socket port:"<<video_socket.localPort();
+    //    qDebug()<<"open video socket port:"<<video_socket.localPort();
     disconnect(&message,&QUdpSocket::readyRead,this,0);
     connect(&message,&QUdpSocket::readyRead,this,[&](){
         QString s;
@@ -100,7 +109,7 @@ inline Client::Client(QObject *parent)
             s = datagram.data();
             break;
         }
-//        qDebug()<<s;
+        //        qDebug()<<s;
         if(s.startsWith("sync_progress"))
             emit sync_progress(s.split(" ").back().toDouble());
         else if(s.startsWith("audio_frame"))
@@ -125,37 +134,40 @@ inline Client::Client(QObject *parent)
             data = datagram.data();
             break;
         }
-//        qDebug()<<"audio frame come in";
+        //        qDebug()<<"audio frame come in";
         //            emit audio_frame(data);
         io->write(data.data(),data.size());
+
+        if(video_socket.state() != QTcpSocket::ConnectedState){
+            video_socket.connectToHost(QHostAddress(ip),52256);
+//            qDebug()<<video_socket.state();
+        }
     });
     disconnect(&video_socket,&QUdpSocket::readyRead,this,0);
     connect(&video_socket,&QUdpSocket::readyRead,this,[&](){
         QByteArray data = video_socket.readAll();;
-//        if(lefted < 65535)
-//            data = video_socket.read(lefted);
-//        else
-//            data = video_socket.readAll();
-
         if(video_data.size() < video_size.front()){
-            qDebug()<<video_data.size()<<data.size()<<video_size.front();
+//            qDebug()<<video_data.size()<<data.size()<<video_size.front();
             video_data.append(data);
         }
 
         if(video_data.size() >= video_size.front())
         {
-            qDebug()<<video_data.size()<<video_size.front();
+//            qDebug()<<video_data.size()<<video_size.front();
             if(video_data.size() > video_size.front())
             {
-//                video_data.clear();
-//                video_size.pop_front();
                 video_socket.write("wrong data");
+                video_data.clear();
+                video_size.clear();
+                video_socket.disconnectFromHost();
+                get("/play=pause");
+                emit state(false);
+                return ;
             }
-
             if(video_data.size() == video_size.front()){
                 QImage image;
                 image.loadFromData(video_data, "jpg");
-                qDebug()<<"video_frame";
+//                qDebug()<<"video_frame";
                 emit video_frame(image);
             }
             if(bIsFirstFrame)
@@ -167,39 +179,6 @@ inline Client::Client(QObject *parent)
             video_size.pop_front();
             video_socket.write("done");
         }
-
-//        while (video_socket.hasPendingDatagrams()) {
-//            QNetworkDatagram datagram = video_socket.receiveDatagram();
-//            data = datagram.data();
-//            break;
-//        }
-//        qDebug()<<"video frame come in"<<data.size();
-//        if(video_data.size() >= video_size || data == "end"){
-//            qDebug()<<video_data.size()<<video_size;
-//            QImage image;
-//            image.loadFromData(video_data, "jpg");
-//            image.loadFromData(data, "jpg");
-//            if(video_data.size() == video_size)
-//            emit video_frame(image);
-//            else
-//            {
-//                video_error++;
-
-//            }
-//            video_count++;
-//            if(video_count == 5)
-//            {
-//                if(video_error > 3)
-//                    message.writeDatagram(QNetworkDatagram("wrong data",QHostAddress(ip),message.localPort()+(1<<8)));
-//                video_count = 0;
-//                video_error = 0;
-//            }
-
-//            video_data.clear();
-//            message.writeDatagram(QNetworkDatagram("in time",QHostAddress(ip),message.localPort()+(1<<8)));
-//        }
-
-
     });
 }
 
@@ -215,9 +194,11 @@ inline void Client::connect_to(QString ip_, QString port_)
 
     this->ip = ip_;
     this->port = port_.toUShort();
+    bIsFirstFrame = true;
     tcp = new QTcpSocket(this);
     tcp->setProxy(QNetworkProxy::NoProxy);
     tcp->connectToHost(QHostAddress(ip),port);
+
     connect(tcp,&QTcpSocket::connected,this,[&](){
         bOnceConnected=true;
         write("GET / HTTP/1.1");
@@ -364,6 +345,8 @@ inline void Client::dataHandler(QString str)
 
             }
         }
+        video_socket.connectToHost(QHostAddress(ip),52256);
+        video_socket.write("hello");
     }
     else if(url == "/sql/table={}/id={}")
     {
@@ -380,8 +363,6 @@ inline void Client::dataHandler(QString str)
         if(ports.size() != 5 || ports[0] != "port")
             return;
         video_size.clear();
-        video_socket.connectToHost(QHostAddress(ip),ports[4].toInt());
-        video_socket.write("hello");
         bIsFirstFrame = true;
 //        QString hello = "ok";
 //        message.writeDatagram(QNetworkDatagram(hello.toUtf8(),QHostAddress(ip),ports[4].toInt()));
