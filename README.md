@@ -6,6 +6,18 @@
 考虑到QTcpSocket的性能问题，服务端使用asio(non boost)作为tcp server接受客户端连接
 因此，服务端使用多线程集成了Qt与asio的事件循环。
 
+#Demo
+
+
+https://github.com/hatsunemugi/player/assets/52739182/c9f4b21f-e156-4bbb-9c06-b104940abc5d
+
+
+
+
+https://github.com/hatsunemugi/player/assets/52739182/540f52dd-346d-4e2e-b783-2cc00039076f
+
+
+
 模仿QHttpServer api实现了函数
 route(QString,std::function<QVariant(QVariant)>);
 
