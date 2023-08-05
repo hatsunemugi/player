@@ -18,6 +18,7 @@ route(QString,std::function<QVariant(QVariant)>);
     });
 
 #关于数据库
+
 本项目使用sqlite，保存在程序运行目录下的media.db
 
 #关于QThread/std::thread
