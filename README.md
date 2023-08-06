@@ -44,9 +44,9 @@ route(QString,std::function<QVariant(QVariant)>);
 
 #关于gbk与utf-8编码
 
-控制台的输入在windows下是以gbk进行编码的，不要妄图使用system("chcp 65001")来解决编码问题。
+控制台的输入在windows下是以gbk进行编码的，不要妄图使用system("chcp 65001")来解决编码问题，Qt对此的支持有限。
 
-一个可选方案是进行转码
+一个可选方案是进行转码，不要将源字符串存在QString中(utf-8->utf-16)，使用QByteArray以避免默认的转码。
 
     static QString trans(char* source,string from_,string to_){
     
