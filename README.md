@@ -69,6 +69,10 @@ route(QString,std::function<QVariant(QVariant)>);
     }
     
 
+#关于enum
+
+使用enum class而不是enum,后者会造成重命名错误。
+
 
 #关于QtQuick
 
