@@ -45,9 +45,8 @@ route(QString,std::function<QVariant(QVariant)>);
 控制台的输入在windows下是以gbk进行编码的，不要妄图使用system("chcp 65001")来解决编码问题。
 
 一个可选方案是进行转码
-    static QString trans(char* source,string from_,string to_)
-    
-    {
+
+    static QString trans(char* source,string from_,string to_){
     
         QTextCodec *from = QTextCodec::codecForName(from_.c_str());
         
