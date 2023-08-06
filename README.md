@@ -67,6 +67,11 @@ route(QString,std::function<QVariant(QVariant)>);
     }
     
 
+#关于QtQuick
+
+使用继承自QPaintedItem的类并实现virtual void paint()后调用update(),便可以在qml中绘制自定义图像了。
+
+
 #关于数据库
 
 本项目使用sqlite，保存在程序运行目录下的media.db
