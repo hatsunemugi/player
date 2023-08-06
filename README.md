@@ -31,6 +31,16 @@ route(QString,std::function<QVariant(QVariant)>);
     
     });
 
+#关于编译原理
+
+实现了一个轻量的解释器以进行词法分析，仅包含一个hpp头文件。
+
+    if(Command::isEmpty(s)||s.isEmpty())//不接受空字符串
+        return;
+    const QVector<Word>& words = Command::analyse(s);
+    print(words);
+
+
 #关于数据库
 
 本项目使用sqlite，保存在程序运行目录下的media.db
