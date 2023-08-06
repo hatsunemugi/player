@@ -31,6 +31,7 @@ route(QString,std::function<QVariant(QVariant)>);
     
     });
 
+
 #关于编译原理
 
 实现了一个轻量的解释器以进行词法分析，仅包含一个hpp头文件。
@@ -39,6 +40,7 @@ route(QString,std::function<QVariant(QVariant)>);
         return;
     const QVector<Word>& words = Command::analyse(s);
     print(words);
+
 
 #关于gbk与utf-8编码
 
@@ -67,14 +69,17 @@ route(QString,std::function<QVariant(QVariant)>);
     }
     
 
+
 #关于QtQuick
 
 使用继承自QPaintedItem的类并实现virtual void paint()后调用update(),便可以在qml中绘制自定义图像了。
 
 
+
 #关于数据库
 
 本项目使用sqlite，保存在程序运行目录下的media.db
+
 
 #关于QThread/std::thread
 
@@ -82,9 +87,11 @@ route(QString,std::function<QVariant(QVariant)>);
 
 项目中我使用std::thread来处理asio的事件循环，使用detach()以实现分离线程，若是使用join()则会阻塞；
 
+
 #大坑
 
 asio的回调函数内写qt的connect是接受不到消息的，所以我在主线程实例化了QUdpSocket和QTcpServer的指针并进行监听
+
 
 #未解决的问题
 
@@ -93,6 +100,7 @@ ffmpeg读取视频帧出现错误，好在Qt有信号量可以用来同步音视
 视频使用opencv进行处理，opencv简洁的api写起来十分顺畅，爱了；
 
 音频的delay精确值由于我无法正确读取avframe，转而使用平均帧率进行计算。
+
 
 #如何编译
 
@@ -107,6 +115,7 @@ set(FFMPEG_PATH C:/Users/c/lib/ffmpeg)
 对于服务端来说，你还要修改
 
 set(ASIO_PATH C:/Users/c/lib/asio)
+
 
 #关于make
 
