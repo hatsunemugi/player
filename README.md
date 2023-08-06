@@ -46,16 +46,27 @@ route(QString,std::function<QVariant(QVariant)>);
 
 一个可选方案是进行转码
     static QString trans(char* source,string from_,string to_)
+    
     {
+    
         QTextCodec *from = QTextCodec::codecForName(from_.c_str());
+        
         QTextCodec *to = QTextCodec::codecForName(to_.c_str());
+        
         char *p;
+        
         QString str = from->toUnicode(source);
+        
         QByteArray to_bytes=to->fromUnicode(str);
+        
         p = to_bytes.data();
+        
         str = p;
+        
         return str;
+        
     }
+    
 
 #关于数据库
 
